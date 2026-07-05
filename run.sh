@@ -47,7 +47,7 @@ fi
 # =========================
 if [ ! -f "$WIN_ISO" ]; then
   echo "Downloading Windows ISO..."
-  wget -O "$WIN_ISO" https://archive.org/download/windows-11-iot-enterprise-ltsc-2024/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso1=1783324852&P2=602&P3=2&P4=uy5ezs%2b5uoY07ClAnYrREFr1lTLLWA8RPw9X1CR43T9HQz8CvqVmQ3xce09%2bm1WRemxjwgnylH9I%2b2cnOwyxLiz%2f93RPrYOvxaWCIITvTNn4O8XkIMLiGfK3hjIqn68uLLo2SrDcrCXYWz4EDXEV5mbfTAXLxXMa%2b2CoP6uzUeDNdwhop%2froTFNGIfq20xF951kmQDcpNuAmWKpK0O03IkNXRWtaCyLiYHC6O%2bd6tiQGkltWVZ%2bEbzfvXVZIOvEG2BcQXnFwU02gFkD3RolF%2f%2fAYfrzMJPjrI4Mwz0tCzqoIGKjr1cJjP37kFcKYP5Bqp8ha0RGi5PMCGkypnG9Irw%3d%3d
+  wget -O "$WIN_ISO" https://archive.org/download/windows-11-iot-enterprise-ltsc-2024/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso
 else
   echo "Windows ISO already exists."
 fi
