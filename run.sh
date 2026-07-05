@@ -11,7 +11,7 @@ if [ ! -f .cleanup_done ]; then
 fi
 
 # =========================
-# Paths 
+# Paths (Mapped /data to your local workspace)
 # =========================
 DATA_DIR="$PWD/data"
 RAW_DISK="$DATA_DIR/disk.qcow2"
@@ -32,14 +32,14 @@ if [ ! -f "$OVMF_CODE" ]; then
   echo "Downloading OVMF_CODE.fd..."
   wget -O "$OVMF_CODE" https://qemu.weilnetz.de/test/ovmf/usr/share/OVMF/OVMF_CODE.fd
 else
-  echo "OVMF_CODE.fd already exists."
+  echo "OVMF_CODE.fd already exists, skipping download."
 fi
 
 if [ ! -f "$OVMF_VARS" ]; then
   echo "Downloading OVMF_VARS.fd..."
   wget -O "$OVMF_VARS" https://qemu.weilnetz.de/test/ovmf/usr/share/OVMF/OVMF_VARS.fd
 else
-  echo "OVMF_VARS.fd already exists."
+  echo "OVMF_VARS.fd already exists, skipping download."
 fi
 
 # =========================
@@ -49,7 +49,7 @@ if [ ! -f "$WIN_ISO" ]; then
   echo "Downloading Windows ISO..."
   wget -O "$WIN_ISO" https://archive.org/download/windows-11-iot-enterprise-ltsc-2024/en-us_windows_11_iot_enterprise_ltsc_2024_x64_dvd_f6b14814.iso
 else
-  echo "Windows ISO already exists."
+  echo "Windows ISO already exists, skipping download."
 fi
 
 # =========================
@@ -59,7 +59,7 @@ if [ ! -f "$VIRTIO_ISO" ]; then
   echo "Downloading VirtIO drivers ISO..."
   wget -O "$VIRTIO_ISO" https://github.com/kmille36/idx-windows-gui/releases/download/1.0/virtio-win-0.1.271.iso
 else
-  echo "VirtIO ISO already exists."
+  echo "VirtIO ISO already exists, skipping download."
 fi
 
 # =========================
@@ -70,18 +70,18 @@ if [ ! -d "$NOVNC_DIR/.git" ]; then
   mkdir -p "$NOVNC_DIR"
   git clone https://github.com/novnc/noVNC.git "$NOVNC_DIR"
 else
-  echo "noVNC already exists."
+  echo "noVNC already exists, skipping clone."
 fi
 
 # =========================
-# Create disk image if not exists
+# [YOUR CODE] Create disk image if not exists
 # =========================
 if [ ! -f "$RAW_DISK" ]; then
   echo "💽 Creating 100GB virtual disk..."
   qemu-img create -f qcow2 "$RAW_DISK" 100G
 fi
 
-# Windows-specific boot parameters
+# [YOUR CODE] Windows-specific boot parameters
 BOOT_ORDER="-boot order=c,menu=on"
 if [ ! -s "$RAW_DISK" ] || [ $(stat -c%s "$RAW_DISK") -lt 1048576 ]; then
   echo "🚀 First boot - installing Windows from ISO"
@@ -89,19 +89,17 @@ if [ ! -s "$RAW_DISK" ] || [ $(stat -c%s "$RAW_DISK") -lt 1048576 ]; then
 fi
 
 # =========================
-# KVM Check & Dynamic Firmware Selection
+# KVM Check & Hardware Config
 # =========================
 if [ -e /dev/kvm ]; then
-  echo "🚀 KVM hardware acceleration detected! Using UEFI mode."
+  echo "🚀 KVM hardware acceleration detected!"
   CPU_FLAGS="-enable-kvm -cpu host,+topoext,hv_relaxed,hv_spinlocks=0x1fff,hv-passthrough,+pae,+nx,kvm=on,+svm"
-  FIRMWARE_FLAGS="-drive if=pflash,format=raw,readonly=on,file=$OVMF_CODE -drive if=pflash,format=raw,file=$OVMF_VARS"
 else
-  echo "⚠️ KVM acceleration not found. Switching to Legacy BIOS to prevent UEFI timeouts."
+  echo "⚠️ KVM acceleration not found. Running with slower software emulation."
   CPU_FLAGS="-cpu max,hv_relaxed,hv_spinlocks=0x1fff,+pae,+nx"
-  FIRMWARE_FLAGS="" # Empty defaults to stable SeaBIOS
 fi
 
-# Adjust RAM Allocation depending on your Replit tier (3072 = 3GB)
+# Adjust RAM Allocation depending on your Replit tier (e.g., 3072 = 3GB)
 RAM_ALLOCATION=3072 
 
 # =========================
@@ -121,7 +119,8 @@ nohup qemu-system-x86_64 \
   $BOOT_ORDER \
   -device virtio-serial-pci \
   -device virtio-rng-pci \
-  $FIRMWARE_FLAGS \
+  -drive if=pflash,format=raw,readonly=on,file="$OVMF_CODE" \
+  -drive if=pflash,format=raw,file="$OVMF_VARS" \
   -drive file="$RAW_DISK",format=qcow2,if=virtio \
   -cdrom "$WIN_ISO" \
   -drive file="$VIRTIO_ISO",media=cdrom,if=ide \
